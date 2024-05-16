@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { io } from 'socket.io-client';
+const URL = "http://localhost:3003";
 
 const MeetingRoom  = ({
   name,
@@ -6,10 +8,12 @@ const MeetingRoom  = ({
   localVideoTrack
 }) => {
   const currentVideoRef = useRef(null);
-
+  const socket = io(URL);
   useEffect(() => {
     if(currentVideoRef.current) {
-      currentVideoRef.current.srcObject = new MediaStream([localVideoTrack]);
+      if(localVideoTrack) {
+        currentVideoRef.current.srcObject = new MediaStream([localVideoTrack]);
+      }
     }
   }, [currentVideoRef]);
 

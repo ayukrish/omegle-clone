@@ -25,7 +25,7 @@ const LandingPage = () => {
   }
 
   useEffect(() => {
-    // getCam();
+    getCam();
   }, [videoRef]);
 
   if(joinedRoom) {
