@@ -1,6 +1,23 @@
-const MeetingRoom  = () => {
+import { useEffect, useRef } from "react";
+
+const MeetingRoom  = ({
+  name,
+  localAudioTrack,
+  localVideoTrack
+}) => {
+  const currentVideoRef = useRef(null);
+
+  useEffect(() => {
+    if(currentVideoRef.current) {
+      currentVideoRef.current.srcObject = new MediaStream([localVideoTrack]);
+    }
+  }, [currentVideoRef]);
+
   return (
-    <div>MeetingRoom</div>
+    <>
+      <div>Hi  {name}</div>
+      <video autoPlay ref={currentVideoRef} height={300} width={300}/>
+    </>
   )
 }
 
