@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import Room from './MeetingRoom';
+import MeetingRoom from './MeetingRoom';
 
 const LandingPage = () => {
-  const [localAudioTrack, setLocalAudioTrack] = useState();
-  const [localVideoTrack, setLocalVideoTrack] = useState();
+  const [stream, setStream] = useState();
   const [name, setName] = useState();
   const [joinedRoom, setJoinedRoom] = useState(false);
   const videoRef = useRef(null);
@@ -16,24 +15,22 @@ const LandingPage = () => {
     });
     const audioTrack = stream.getAudioTracks()[0];
     const videoTrack = stream.getVideoTracks()[0];
-    setLocalAudioTrack(audioTrack);
-    setLocalVideoTrack(videoTrack);
+    setStream(stream);
     if (!videoRef.current) {
       return;
     }
-    videoRef.current.srcObject = new MediaStream([videoTrack]);
+    videoRef.current.srcObject = new MediaStream([videoTrack, audioTrack]);
   }
 
   useEffect(() => {
-    getCam();
+    // getCam();
   }, [videoRef]);
 
   if(joinedRoom) {
     return (
-      <Room
+      <MeetingRoom
         name={name}
-        localAudioTrack={localAudioTrack}
-        localVideoTrack={localVideoTrack}
+        stream={stream}
       />
     )
   }
