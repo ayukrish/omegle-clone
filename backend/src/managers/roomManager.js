@@ -38,7 +38,7 @@ export class RoomManager {
     otherUser?.socket.emit("receive-offer", {
       sdp,
       roomId
-    })
+    });
   }
 
 

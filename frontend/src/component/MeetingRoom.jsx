@@ -14,7 +14,7 @@ const MeetingRoom  = ({
   useEffect(() => {
     const socket = io(URL);
 
-    socket.on('send-offer', async (roomId) => {
+    socket.on('send-offer', async ({ roomId }) => {
       console.log('event to send offer to other user', roomId);
 
       const pc = new RTCPeerConnection();
