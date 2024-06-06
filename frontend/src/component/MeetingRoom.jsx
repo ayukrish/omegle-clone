@@ -15,7 +15,6 @@ const MeetingRoom  = ({
     const socket = io(URL);
 
     socket.on('send-offer', async ({ roomId }) => {
-      console.log('event to send offer to other user', roomId);
 
       const pc = new RTCPeerConnection();
       setSendingPc(pc);
@@ -23,19 +22,17 @@ const MeetingRoom  = ({
         pc.addStream(stream);
       }
       pc.onicecandidate = async (e) => {
-        console.log(e, 'onicecandidate');
         if (!e.candidate) {
           return;
         }
         socket.emit('add-ice-candidate', {
           candidate: e.candidate,
-          // type: "sender",
+          type: "sender",
           roomId
         })
       };
 
-      pc.onnegotiationneeded = async (e) => {
-        console.log(e, 'onnegotiationneeded');
+      pc.onnegotiationneeded = async () => {
         const sdp = await pc.createOffer();
         pc.setLocalDescription(sdp);
         socket.emit('offer', {
@@ -45,16 +42,56 @@ const MeetingRoom  = ({
       }
     });
 
-    socket.on('receive-offer', async (roomId) => {
-      console.log('event of receiving offer');
+    socket.on('receive-offer', async ({ roomId, sdp }) => {
+      const pc = new RTCPeerConnection();
+      console.log(sdp);
+      pc.setRemoteDescription(sdp);
+      setReceivingPc(pc);
+      const localSdp = await pc.createAnswer();
+      pc.setLocalDescription(localSdp);
+      socket.emit('answer', {
+        sdp: localSdp,
+        roomId,
+      });
+
+      pc.onicecandidate = async (e) => {
+        if (!e.candidate) {
+          return;
+        }
+        socket.emit('add-ice-candidate', {
+          candidate: e.candidate,
+          type: "receiver",
+          roomId
+        })
+      };
+
+      pc.ontrack = e => {
+        console.log(e);
+      };
     });
 
-    socket.on('add-ice-candidate', (candidate) => {
-      console.log('add-ice-candidate');
-      const pc = new RTCPeerConnection();
-      pc.addIceCandidate(candidate);
-      setReceivingPc(pc);
+    socket.on('add-ice-candidate', ({ candidate, type }) => {
+      if (type === "sender") {
+        setReceivingPc((pc) => {
+          pc?.addIceCandidate(candidate);
+          return pc;
+        });
+      } else {
+        setSendingPc((pc) => {
+          pc?.addIceCandidate(candidate)
+          return pc;
+        });
+      }
     });
+
+    socket.on('answer', ({ roomId, sdp }) => {
+      setSendingPc((pc) => {
+        console.log(sdp);
+        pc.setRemoteDescription(sdp);
+        return pc;
+      });
+    });
+
   }, []);
 
   useEffect(() => {
