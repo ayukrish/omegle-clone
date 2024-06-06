@@ -32,7 +32,7 @@ const MeetingRoom  = ({
         })
       };
 
-      pc.onnegotiationneeded = async (e) => {
+      pc.onnegotiationneeded = async () => {
         const sdp = await pc.createOffer();
         pc.setLocalDescription(sdp);
         socket.emit('offer', {
@@ -44,8 +44,9 @@ const MeetingRoom  = ({
 
     socket.on('receive-offer', async ({ roomId, sdp }) => {
       const pc = new RTCPeerConnection();
-      setReceivingPc(pc);
+      console.log(sdp);
       pc.setRemoteDescription(sdp);
+      setReceivingPc(pc);
       const localSdp = await pc.createAnswer();
       pc.setLocalDescription(localSdp);
       socket.emit('answer', {
@@ -85,6 +86,7 @@ const MeetingRoom  = ({
 
     socket.on('answer', ({ roomId, sdp }) => {
       setSendingPc((pc) => {
+        console.log(sdp);
         pc.setRemoteDescription(sdp);
         return pc;
       });
