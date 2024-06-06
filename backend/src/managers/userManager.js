@@ -41,12 +41,16 @@ export class UserManager {
 
   initHandler(socket) {
 
-    socket.on('offer', (sdp, roomId) => {
+    socket.on('offer', ({ sdp, roomId }) => {
       this.roomManager.onOffer(sdp, roomId)
     });
 
-    socket.on('add-ice-candidate', (candidate, roomId) => {
-      this.roomManager.onIceCandidates(candidate, roomId, socket.id);
+    socket.on('answer', ({ sdp, roomId }) => {
+      this.roomManager.onAnswer(sdp, roomId)
+    });
+
+    socket.on('add-ice-candidate', ({ candidate, roomId, type }) => {
+      this.roomManager.onIceCandidates(candidate, roomId, type, socket.id);
     });
   }
 }
