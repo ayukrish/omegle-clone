@@ -42,11 +42,11 @@ export class UserManager {
   initHandler(socket) {
 
     socket.on('offer', ({ sdp, roomId }) => {
-      this.roomManager.onOffer(sdp, roomId)
+      this.roomManager.onOffer(sdp, roomId, socket.id)
     });
 
     socket.on('answer', ({ sdp, roomId }) => {
-      this.roomManager.onAnswer(sdp, roomId)
+      this.roomManager.onAnswer(sdp, roomId, socket.id)
     });
 
     socket.on('add-ice-candidate', ({ candidate, roomId, type }) => {
