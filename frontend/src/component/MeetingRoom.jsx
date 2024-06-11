@@ -33,10 +33,10 @@ const MeetingRoom  = ({
       };
 
       pc.onnegotiationneeded = async () => {
-        const sdp = await pc.createOffer();
-        pc.setLocalDescription(sdp);
+        const d = await pc.createOffer();
+        await pc.setLocalDescription(d);
         socket.emit('offer', {
-          sdp,
+          sdp: pc.localDescription,
           roomId
         });
       }
@@ -44,16 +44,14 @@ const MeetingRoom  = ({
 
     socket.on('receive-offer', async ({ roomId, sdp }) => {
       const pc = new RTCPeerConnection();
-      console.log(sdp);
-      pc.setRemoteDescription(sdp);
       setReceivingPc(pc);
+      await pc.setRemoteDescription(sdp);
       const localSdp = await pc.createAnswer();
-      pc.setLocalDescription(localSdp);
-      socket.emit('answer', {
-        sdp: localSdp,
-        roomId,
-      });
-
+      await pc.setLocalDescription(localSdp);
+      const stream = new MediaStream();
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = stream;
+      }
       pc.onicecandidate = async (e) => {
         if (!e.candidate) {
           return;
@@ -65,20 +63,35 @@ const MeetingRoom  = ({
         })
       };
 
-      pc.ontrack = e => {
-        console.log(e);
-      };
+      // pc.ontrack = e => {
+      //   console.log(e, 'eeeeee');
+      //   remoteVideoRef.current.srcObject = new MediaStream([e.streams[0]]);
+      // };
+
+      setTimeout(() => {
+        const track1 = pc.getTransceivers()[0].receiver.track;
+        const track2 = pc.getTransceivers()[1].receiver.track;
+        remoteVideoRef.current.srcObject.addTrack(track1);
+        remoteVideoRef.current.srcObject.addTrack(track2);
+      }, 2000);
+
+      socket.emit('answer', {
+        sdp: localSdp,
+        roomId,
+      });
     });
 
     socket.on('add-ice-candidate', ({ candidate, type }) => {
       if (type === "sender") {
         setReceivingPc((pc) => {
-          pc?.addIceCandidate(candidate);
+          console.log('setReceivingPc', pc);
+          pc.addIceCandidate(candidate);
           return pc;
         });
       } else {
         setSendingPc((pc) => {
-          pc?.addIceCandidate(candidate)
+          console.log('setSendingPc', pc);
+          pc.addIceCandidate(candidate)
           return pc;
         });
       }
@@ -86,7 +99,6 @@ const MeetingRoom  = ({
 
     socket.on('answer', ({ roomId, sdp }) => {
       setSendingPc((pc) => {
-        console.log(sdp);
         pc.setRemoteDescription(sdp);
         return pc;
       });
